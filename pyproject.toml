@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "advertion"
+version = "0.1.0-alpha1"
+description = "A tiny framework to perform adversarial validation of your training and test data."
+authors = ["Ilias Antonopoulos <ilias.antonopoulos@yahoo.gr>"]
+license = "Apache License 2.0"
+readme = "README.md"
+homepage = "https://pypi.org/project/advertion"
+repository = "https://github.com/ilias-ant/advertion"
+keywords = ["adversarial-validation", "data-drift", "machine-learning"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3 :: Only",
+]
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/ilias-ant/advertion/issues"
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.12"
+
+scikit-learn = "^1.3.0"
+pandas = "^2.0.3"
+xgboost = "^1.7.6"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"
+isort = "^5.12.0"
+notebook = "^6.5.4"
+pytest = "^7.4.0"
+pytest-cov = "^4.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
