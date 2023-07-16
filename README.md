@@ -32,8 +32,6 @@ are_similar = validate(
     test=test,
     target="label",
 )
-# are_similar = True: train and test are following 
-# the same underlying distribution.
-# are_similar = False: test dataset exhibits a different
-# underlying distribution than train dataset.
+# are_similar = True: train and test are following the same underlying distribution.
+# are_similar = False: test dataset exhibits a different underlying distribution than train dataset.
 ```
