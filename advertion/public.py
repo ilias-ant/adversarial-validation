@@ -14,36 +14,39 @@ def validate(
     n_splits: int = 5,
     verbose: bool = True,
     random_state: Union[int, np.random.RandomState] = None,
-):
+) -> bool:
     """Performs adversarial validation on the train & test datasets provided.
 
     Args:
         train (pd.DataFrame): The training dataset.
         test (pd.DataFrame): The testing dataset.
         target (str): The target column name.
-        smart (bool, optional): Whether to prune features strong identification properties. Defaults to True.
-        n_splits (int, optional): The number of splits to perform. Defaults to 5.
-        verbose (bool, optional): Whether to print informative messages. Defaults to True.
-        random_state (int, optional): The random state. Defaults to None.
+        smart (bool, optional): Whether to prune features with strongly identifiable properties.
+        n_splits (int, optional): The number of splits to perform.
+        verbose (bool, optional): Whether to print informative messages.
+        random_state (Union[int, np.random.RandomState], optional): The random state.
 
     Returns:
-        None
+        bool: Whether the train & test datasets follow the same underlying distribution.
 
     Raises:
         ValueError: If a validation error occurs, based on the provided parameters.
 
-    Example:
-
+    Examples:
         >>> from advertion import validate
         >>>
         >>> train = pd.read_csv("...")
         >>> test = pd.read_csv("...")
         >>>
-        >>> validate(
+        >>> are_similar = validate(
         >>>     train=train,
         >>>     test=test,
         >>>     target="label",
         >>> )
+        >>> # are_similar = True: train and test are following the same
+        >>> # underlying distribution.
+        >>> # are_similar = False: test dataset exhibits a different
+        >>> # underlying distribution than train dataset.
 
     """
     return AdversarialValidation(

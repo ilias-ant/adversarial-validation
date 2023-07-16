@@ -7,30 +7,3 @@
 [![PyPI - Wheel](https://img.shields.io/pypi/wheel/advertion?color=orange)](https://www.python.org/dev/peps/pep-0427/)
 
 A tiny framework to perform adversarial validation of your training and test data.
-
-## Install
-
-The recommended installation is via `pip`:
-
-```bash
-pip install advertion
-```
-
-(*advertion stands for **adver**sarial valida**tion***)
-
-## Usage
-
-```python
-from advertion import validate
-
-train = pd.read_csv("...")
-test = pd.read_csv("...")
-
-are_similar = validate(
-    train=train,
-    test=test,
-    target="label",
-)
-# are_similar = True: train and test are following the same underlying distribution.
-# are_similar = False: test dataset exhibits a different underlying distribution than train dataset.
-```

@@ -1,0 +1,54 @@
+site_name: adversarial-validation
+site_description: adversarial-validation documentation page
+site_author: ilias-ant
+
+repo_name: ilias-ant/adversarial-validation
+repo_url: https://github.com/ilias-ant/adversarial-validation
+edit_uri: ""
+
+theme:
+  name: material
+  locale: en
+  palette:
+  - scheme: default
+    primary: blue grey
+    accent: amber
+    toggle:
+      icon: material/toggle-switch-off-outline
+      name: Switch to dark mode
+  - scheme: slate
+    primary: blue grey
+    accent: amber
+    toggle:
+      icon: material/toggle-switch
+      name: Switch to light mode
+  features:
+    - navigation.instant
+    - search.suggest
+    - search.highlight
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+plugins:
+- search
+- mkdocstrings:
+    watch:
+      - advertion
+    default_handler: python
+
+nav:
+    - Home: index.md
+    - Installation: installation.md
+    - API Reference: api.md
+    - How to Contribute: contributing.md
+    - Documentation: documentation.md
+    - License: license.md
+
+extra:
+    social:
+        - icon: fontawesome/brands/github-alt
+          link: 'https://github.com/ilias-ant'
+        - icon: fontawesome/brands/linkedin
+          link: 'https://www.linkedin.com/in/ilias-ant'

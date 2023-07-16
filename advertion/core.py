@@ -10,27 +10,11 @@ from sklearn import metrics, model_selection
 
 
 class AdversarialValidation(object):
-    """`AdversarialValidation` is an internal interface performing adversarial validation on your training and testing datasets.
+    """`AdversarialValidation` is an internal interface performing adversarial validation
+    on your training and test datasets.
 
     **Note**: Any attributes or methods prefixed with _underscores are forming a so-called "private" API, and is
     for internal use only. They may be changed or removed at anytime.
-
-    Example:
-
-        >>> train = pd.read_csv("...")
-        >>> test = pd.read_csv("...")
-        >>>
-        >>> adv = AdversarialValidation(
-        >>>     train=train,
-        >>>     test=test,
-        >>>     target="label",
-        >>>     smart=True,
-        >>>     n_splits=5,
-        >>>     verbose=True,
-        >>>     random_state=42,
-        >>> )
-        >>>
-        >>> adv.perform()
     """
 
     @validate_call(config=dict(arbitrary_types_allowed=True))
@@ -65,7 +49,7 @@ class AdversarialValidation(object):
         - Performs cross-validation on the meta-dataset, using the new feature as the target variable.
 
         Returns:
-            bool: Whether the training and test datasets are similar or not.
+            bool: Whether the train & test datasets follow the same underlying distribution.
         """
         train = self.__keep_numeric_types(self._train)
         test = self.__keep_numeric_types(self._test)
@@ -95,6 +79,14 @@ class AdversarialValidation(object):
         )
 
     def datasets_are_similar(self, metric: float) -> bool:
+        """Handles the response when the training and test datasets follow the same underlying distribution.
+
+        Args:
+            metric (float): The mean ROC AUC score.
+
+        Returns:
+            bool: Always returns True.
+        """
         if self._verbose:
             print(
                 f"INFO: The training and test datasets are similar [mean ROC AUC: {round(metric, 3)}]."
@@ -102,6 +94,14 @@ class AdversarialValidation(object):
         return True
 
     def datasets_are_different(self, metric: float) -> bool:
+        """Handles the response when the training and test datasets follow different underlying distributions.
+
+        Args:
+            metric (float): The mean ROC AUC score.
+
+        Returns:
+            bool: Always returns False.
+        """
         if self._verbose:
             print(
                 f"INFO: The training and test datasets are similar [mean ROC AUC: {round(metric, 3)}]."
@@ -114,8 +114,16 @@ class AdversarialValidation(object):
         return False
 
     def _cross_validate(self, X: pd.DataFrame, y: pd.Series) -> Iterable[float]:
-        """Performs cross-validation, calculating the Area Under the Receiver Operating Characteristic Curve
-        (ROC AUC) from prediction scores.
+        """Performs cross-validation, calculating the
+        Area Under the Receiver Operating Characteristic Curve (ROC AUC)
+        from prediction scores.
+
+        Args:
+            X (pd.DataFrame): The design matrix.
+            y (pd.Series): The target variable.
+
+        Returns:
+            Iterable[float]: An iterable of ROC AUC scores.
         """
         cv = model_selection.StratifiedKFold(
             n_splits=self._n_splits, shuffle=True, random_state=self._random_state
@@ -134,7 +142,15 @@ class AdversarialValidation(object):
             yield metrics.roc_auc_score(y_test, y_pred)
 
     def _prune_features(self, X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
-        """Prunes features from the design matrix, based on a feature importance scheme."""
+        """Prunes features from the design matrix, based on a feature importance scheme.
+
+        Args:
+            X (pd.DataFrame): The design matrix.
+            y (pd.Series): The target variable.
+
+        Returns:
+            pd.DataFrame: The pruned design matrix.
+        """
         clf = self._classifier()
 
         model = clf.fit(X, y)
@@ -154,10 +170,24 @@ class AdversarialValidation(object):
 
     @staticmethod
     def __keep_numeric_types(df: pd.DataFrame) -> pd.DataFrame:
-        """Keeps only numeric columns in the `df`."""
+        """Keeps only numeric columns in the `df`.
+
+        Args:
+            df (pd.DataFrame): A DataFrame.
+
+        Returns:
+            pd.DataFrame: A DataFrame with only numeric-type columns.
+        """
         return df.select_dtypes(include=np.number).copy()
 
     @staticmethod
     def _classifier(**params):
-        """Returns a classifier instance."""
+        """Returns a classifier instance.
+
+        Args:
+            **params: Arbitrary keyword arguments.
+
+        Returns:
+            xgb.XGBClassifier: An XGBoost classifier instance.
+        """
         return xgb.XGBClassifier(**params)
