@@ -151,6 +151,8 @@ class AdversarialValidation(object):
         Returns:
             pd.DataFrame: The pruned design matrix.
         """
+        # TODO: use Kolmogorov–Smirnov hypothesis test and calculate - for each feature - the p-value for the
+        #  hypothesis that the two distributions are indeed the same. Use p-value and test value to prune features.
         clf = self._classifier()
 
         model = clf.fit(X, y)

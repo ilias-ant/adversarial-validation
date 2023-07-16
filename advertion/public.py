@@ -23,8 +23,9 @@ def validate(
         target (str): The target column name.
         smart (bool, optional): Whether to prune features with strongly identifiable properties.
         n_splits (int, optional): The number of splits to perform.
-        verbose (bool, optional): Whether to print informative messages.
-        random_state (Union[int, np.random.RandomState], optional): The random state.
+        verbose (bool, optional): Whether to print informative messages to the standard output.
+        random_state (Union[int, np.random.RandomState], optional): If you wish to ensure reproducible output across \
+        multiple function calls.
 
     Returns:
         bool: Whether the train & test datasets follow the same underlying distribution.
