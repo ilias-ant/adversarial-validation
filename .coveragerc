@@ -1,0 +1,4 @@
+[run]
+source = advertion
+omit = *__init__*
+       *tests*
