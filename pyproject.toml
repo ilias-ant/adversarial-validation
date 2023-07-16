@@ -6,7 +6,7 @@ authors = ["Ilias Antonopoulos <ilias.antonopoulos@yahoo.gr>"]
 license = "Apache License 2.0"
 readme = "README.md"
 homepage = "https://pypi.org/project/advertion"
-repository = "https://github.com/ilias-ant/advertion"
+repository = "https://github.com/ilias-ant/adversarial-validation"
 keywords = ["adversarial-validation", "data-drift", "machine-learning"]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
@@ -21,7 +21,7 @@ classifiers = [
 ]
 
 [tool.poetry.urls]
-"Bug Tracker" = "https://github.com/ilias-ant/advertion/issues"
+"Bug Tracker" = "https://github.com/ilias-ant/adversarial-validation/issues"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
