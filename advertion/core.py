@@ -1,10 +1,11 @@
 from math import isclose
 from statistics import mean
-from typing import Iterable
+from typing import Iterable, Union
 
 import numpy as np
 import pandas as pd
 import xgboost as xgb
+from pydantic import validate_call
 from sklearn import metrics, model_selection
 
 
@@ -32,15 +33,16 @@ class AdversarialValidation(object):
         >>> adv.perform()
     """
 
+    @validate_call(config=dict(arbitrary_types_allowed=True))
     def __init__(
         self,
         train: pd.DataFrame,
         test: pd.DataFrame,
         target: str,
-        smart: bool,
-        n_splits: int,
-        verbose: bool,
-        random_state: int,
+        smart: bool = True,
+        n_splits: int = 5,
+        verbose: bool = True,
+        random_state: Union[int, np.random.RandomState] = None,
     ):
         self._train = train
         self._test = test
@@ -92,26 +94,26 @@ class AdversarialValidation(object):
             else self.datasets_are_different(mean_roc_auc)
         )
 
-    def datasets_are_similar(self, roc_auc: float) -> bool:
+    def datasets_are_similar(self, metric: float) -> bool:
         if self._verbose:
             print(
-                f"INFO: The training and test datasets are similar [mean ROC AUC: {round(roc_auc, 3)}]."
+                f"INFO: The training and test datasets are similar [mean ROC AUC: {round(metric, 3)}]."
             )
         return True
 
-    def datasets_are_different(self, roc_auc: float) -> bool:
+    def datasets_are_different(self, metric: float) -> bool:
         if self._verbose:
             print(
-                f"INFO: The training and test datasets are similar [mean ROC AUC: {round(roc_auc, 3)}]."
+                f"INFO: The training and test datasets are similar [mean ROC AUC: {round(metric, 3)}]."
             )
 
-            if roc_auc < 0.4:
+            if metric < 0.4:
                 print(
                     f"INFO: The reported ROC AUC value is very low, which may indicate a class confusion problem."
                 )
         return False
 
-    def _cross_validate(self, X, y) -> Iterable[float]:
+    def _cross_validate(self, X: pd.DataFrame, y: pd.Series) -> Iterable[float]:
         """Performs cross-validation, calculating the Area Under the Receiver Operating Characteristic Curve
         (ROC AUC) from prediction scores.
         """
@@ -131,7 +133,7 @@ class AdversarialValidation(object):
 
             yield metrics.roc_auc_score(y_test, y_pred)
 
-    def _prune_features(self, X, y) -> pd.DataFrame:
+    def _prune_features(self, X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
         """Prunes features from the design matrix, based on a feature importance scheme."""
         clf = self._classifier()
 

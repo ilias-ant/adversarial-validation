@@ -1,3 +1,6 @@
+from typing import Union
+
+import numpy as np
 import pandas as pd
 
 from .core import AdversarialValidation
@@ -10,7 +13,7 @@ def validate(
     smart: bool = True,
     n_splits: int = 5,
     verbose: bool = True,
-    random_state: int = None,
+    random_state: Union[int, np.random.RandomState] = None,
 ):
     """Performs adversarial validation on the train & test datasets provided.
 
@@ -20,13 +23,14 @@ def validate(
         target (str): The target column name.
         smart (bool, optional): Whether to prune features strong identification properties. Defaults to True.
         n_splits (int, optional): The number of splits to perform. Defaults to 5.
+        verbose (bool, optional): Whether to print informative messages. Defaults to True.
         random_state (int, optional): The random state. Defaults to None.
 
     Returns:
         None
 
     Raises:
-        AdvertionError: If the train or test datasets are empty.
+        ValueError: If a validation error occurs, based on the provided parameters.
 
     Example:
 
@@ -40,7 +44,6 @@ def validate(
         >>>     test=test,
         >>>     target="label",
         >>> )
-
 
     """
     return AdversarialValidation(
