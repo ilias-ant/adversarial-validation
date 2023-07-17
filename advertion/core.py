@@ -6,7 +6,10 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 from pydantic import validate_call
+from scipy import stats
 from sklearn import metrics, model_selection
+
+from .version import __version__
 
 
 class AdversarialValidation(object):
@@ -20,98 +23,87 @@ class AdversarialValidation(object):
     @validate_call(config=dict(arbitrary_types_allowed=True))
     def __init__(
         self,
-        train: pd.DataFrame,
-        test: pd.DataFrame,
-        target: str,
         smart: bool = True,
         n_splits: int = 5,
         verbose: bool = True,
-        random_state: Union[int, np.random.RandomState] = None,
+        random_state: Union[int, np.random.RandomState, None] = None,
     ):
-        self._train = train
-        self._test = test
-        self._target = target
         self._smart = smart
         self._n_splits = n_splits
         self._verbose = verbose
         self._random_state = random_state
         self._av_target = "_av_target_"
-        self._feature_importance_threshold = 0.95
-        self._tol = 0.05
+        self._statistic_threshold = 0.1
+        self._p_value_threshold = 0.05
+        self._decision_tolerance = 0.05
 
-    def perform(self):
+    @validate_call(config=dict(arbitrary_types_allowed=True))
+    def perform(
+        self, trainset: pd.DataFrame, testset: pd.DataFrame, target: str
+    ) -> dict:
         """Orchestrates the adversarial validation process.
 
         - Creates a new feature in both the training and test datasets.
         - Sets the value of the new feature to 0.0 for the training dataset, and 1.0 for the test dataset.
         - Drops original target variable from training dataset.
         - Combines the training and test datasets into a single dataset - let's call it `meta-dataset`.
+        - Optionally, identifies and drops adversarial features in the design matrix.
         - Performs cross-validation on the meta-dataset, using the new feature as the target variable.
 
+        Args:
+            trainset (pd.DataFrame): The training dataset.
+            testset (pd.DataFrame): The test dataset.
+            target (str): The target column name.
+
         Returns:
-            bool: Whether the train & test datasets follow the same underlying distribution.
+            dict: An informative key-valued response.
         """
-        train = self.__keep_numeric_types(self._train)
-        test = self.__keep_numeric_types(self._test)
+        response = dict()
 
-        train[self._av_target] = 0.0
-        test[self._av_target] = 1.0
+        print("INFO: Keeping only numerical features...")
+        trainset = self.__preprocessing(trainset)
+        testset = self.__preprocessing(testset)
 
-        train = train.drop(self._target, axis=1)
+        trainset[self._av_target] = 0.0
+        testset[self._av_target] = 1.0
 
-        combined = pd.concat([train, test], axis=0, ignore_index=True)
+        trainset = trainset.drop(target, axis=1)
+
+        combined = pd.concat([trainset, testset], axis=0, ignore_index=True)
+
+        combined = combined.sample(frac=1)
 
         X = combined.drop(self._av_target, axis=1)
 
         y = combined[self._av_target]
 
         if self._smart:
-            X = self._prune_features(X, y)
+            adv_features = [*self._identify_adversarial_features(trainset, testset)]
+            X = X.drop(adv_features, axis=1)
+            response["adversarial_features"] = adv_features
 
         mean_roc_auc = mean([*self._cross_validate(X, y)])
 
-        no_better_than_random = isclose(0.5, mean_roc_auc, abs_tol=self._tol)
-
-        return (
-            self.datasets_are_similar(mean_roc_auc)
-            if no_better_than_random
-            else self.datasets_are_different(mean_roc_auc)
+        no_better_than_random = isclose(
+            0.5, mean_roc_auc, abs_tol=self._decision_tolerance
         )
 
-    def datasets_are_similar(self, metric: float) -> bool:
-        """Handles the response when the training and test datasets follow the same underlying distribution.
-
-        Args:
-            metric (float): The mean ROC AUC score.
-
-        Returns:
-            bool: Always returns True.
-        """
         if self._verbose:
-            print(
-                f"INFO: The training and test datasets are similar [mean ROC AUC: {round(metric, 3)}]."
-            )
-        return True
+            info = "INFO: training and test datasets "
+            info += "follow" if no_better_than_random else "do not follow"
+            info += " the same underlying distribution"
+            info += f" [mean ROC AUC: {round(mean_roc_auc, 3)}]."
 
-    def datasets_are_different(self, metric: float) -> bool:
-        """Handles the response when the training and test datasets follow different underlying distributions.
-
-        Args:
-            metric (float): The mean ROC AUC score.
-
-        Returns:
-            bool: Always returns False.
-        """
-        if self._verbose:
-            print(
-                f"INFO: The training and test datasets are similar [mean ROC AUC: {round(metric, 3)}]."
-            )
-
-            if metric < 0.4:
+            print(info)
+            if mean_roc_auc < 0.4:
                 print(
                     f"INFO: The reported ROC AUC value is very low, which may indicate a class confusion problem."
                 )
-        return False
+
+        response["datasets_follow_same_distribution"] = no_better_than_random
+        response["mean_roc_auc"] = mean_roc_auc
+
+        return response
 
     def _cross_validate(self, X: pd.DataFrame, y: pd.Series) -> Iterable[float]:
         """Performs cross-validation, calculating the
@@ -141,38 +133,46 @@ class AdversarialValidation(object):
 
             yield metrics.roc_auc_score(y_test, y_pred)
 
-    def _prune_features(self, X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
+    def _identify_adversarial_features(
+        self, trainset: pd.DataFrame, testset: pd.DataFrame
+    ) -> Iterable[str]:
         """Prunes features from the design matrix, based on a feature importance scheme.
 
         Args:
-            X (pd.DataFrame): The design matrix.
-            y (pd.Series): The target variable.
+            trainset (pd.DataFrame): The training dataset.
+            testset (pd.DataFrame): The test dataset.
 
         Returns:
-            pd.DataFrame: The pruned design matrix.
+            Iterable[str]: An iterable of feature names.
         """
-        # TODO: use Kolmogorov–Smirnov hypothesis test and calculate - for each feature - the p-value for the
-        #  hypothesis that the two distributions are indeed the same. Use p-value and test value to prune features.
-        clf = self._classifier()
+        print(
+            f"INFO: Will try to identify adversarial features "
+            f"(see: https://advertion.readthedocs.io/en/{__version__}/adversarial-features)"
+        )
 
-        model = clf.fit(X, y)
+        for feature in testset.columns:
+            if isinstance(feature, str) and feature == self._av_target:
+                continue
 
-        prunable_features = [
-            feature
-            for feature, importance in zip(X.columns, model.feature_importances_)
-            if importance >= self._feature_importance_threshold
-        ]
-
-        if self._verbose:
-            print(
-                f"INFO: The following features were pruned, based on feature importance: {prunable_features}"
+            statistic, p_value = stats.kstest(
+                trainset[feature].values, testset[feature].values
             )
 
-        return X.drop(prunable_features, axis=1)
+            if (
+                statistic > self._statistic_threshold
+                and p_value < self._p_value_threshold
+            ):
+                if self._verbose:
+                    print(
+                        f"INFO: Identified adversarial feature: "
+                        f"[name: {feature}, statistic: {statistic}, p-value: {p_value}]."
+                    )
+
+                yield feature
 
     @staticmethod
-    def __keep_numeric_types(df: pd.DataFrame) -> pd.DataFrame:
-        """Keeps only numeric columns in the `df`.
+    def __preprocessing(df: pd.DataFrame) -> pd.DataFrame:
+        """Performs sensible preprocessing on `df` (in a copy of it).
 
         Args:
             df (pd.DataFrame): A DataFrame.
