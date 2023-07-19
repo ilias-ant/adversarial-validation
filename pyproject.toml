@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "advertion"
-version = "0.1.0-alpha"
+version = "0.1.0-beta"
 description = "A tiny framework to perform adversarial validation of your training and test data."
 authors = ["Ilias Antonopoulos <ilias.antonopoulos@yahoo.gr>"]
 license = "Apache License 2.0"
@@ -9,7 +9,7 @@ homepage = "https://pypi.org/project/advertion"
 repository = "https://github.com/ilias-ant/adversarial-validation"
 keywords = ["adversarial-validation", "data-drift", "machine-learning"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Education",
     "Intended Audience :: Information Technology",
