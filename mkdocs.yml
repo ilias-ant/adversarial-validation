@@ -53,3 +53,5 @@ extra:
           link: 'https://github.com/ilias-ant'
         - icon: fontawesome/brands/linkedin
           link: 'https://www.linkedin.com/in/ilias-ant'
+        - icon: fontawesome/solid/blog
+          link: 'https://ilias-ant.github.io/'

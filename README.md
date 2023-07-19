@@ -28,7 +28,7 @@ from advertion import validate
 train = pd.read_csv("...")
 test = pd.read_csv("...")
 
-are_similar = validate(
+validate(
     trainset=train,
     testset=test,
     target="label",
