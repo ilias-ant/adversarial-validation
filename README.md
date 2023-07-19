@@ -37,6 +37,6 @@ are_similar = validate(
 # // {
 # //     "datasets_follow_same_distribution": True,
 # //     'mean_roc_auc': 0.5021320833333334,
-# //     "adversarial_features': [],
+# //     "adversarial_features': ['id'],
 # // }
 ```

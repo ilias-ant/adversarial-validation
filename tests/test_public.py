@@ -2,10 +2,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from advertion.validate import validate
+from advertion import validate
 
 
-class TestValidate:
+class TestPublic:
     def test_validate_and_datasets_follow_same_distribution(self):
         seed = 313233
 
@@ -111,3 +111,15 @@ class TestValidate:
         assert verdict["datasets_follow_same_distribution"] is False
         assert verdict["mean_roc_auc"] == pytest.approx(0.15, abs=0.1)
         assert verdict["adversarial_features"] == []
+
+    def test_version_exists(self):
+
+        try:
+
+            from advertion import __version__
+
+            assert isinstance(__version__, str)
+
+        except ImportError:
+
+            pytest.fail("advertion.__version__ does not exist.")
