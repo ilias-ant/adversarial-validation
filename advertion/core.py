@@ -148,7 +148,7 @@ class AdversarialValidation(object):
             Iterable[str]: An iterable of feature names.
         """
         print(
-            f"INFO: Will try to identify adversarial features "
+            f"INFO: Will try to identify adv. features "
             f"(see: https://advertion.readthedocs.io/en/{__version__}/adversarial-features)"
         )
 
@@ -184,8 +184,7 @@ class AdversarialValidation(object):
         """
         return df.select_dtypes(include=np.number).copy()
 
-    @staticmethod
-    def _classifier(**params):
+    def _classifier(self, **params):
         """Returns a classifier instance.
 
         Args:
@@ -194,4 +193,4 @@ class AdversarialValidation(object):
         Returns:
             xgb.XGBClassifier: An XGBoost classifier instance.
         """
-        return xgb.XGBClassifier(**params)
+        return xgb.XGBClassifier(**params, random_state=self._random_state)
