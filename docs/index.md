@@ -10,7 +10,7 @@
 
 A tiny framework to perform adversarial validation of your training and test data.
 
-<img src="https://github.com/ilias-ant/adversarial-validation/blob/main/static/logo.jpg" width="90%" text="figjam">
+<img src="https://github.com/ilias-ant/adversarial-validation/blob/main/static/logo.png" width="90%" text="figjam">
 
 **What is adversarial validation?**
 
