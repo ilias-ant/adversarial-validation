@@ -113,13 +113,10 @@ class TestPublic:
         assert verdict["adversarial_features"] == []
 
     def test_version_exists(self):
-
         try:
-
             from advertion import __version__
 
             assert isinstance(__version__, str)
 
         except ImportError:
-
             pytest.fail("advertion.__version__ does not exist.")
