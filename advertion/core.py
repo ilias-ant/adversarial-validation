@@ -60,9 +60,10 @@ class AdversarialValidation(object):
         """
         response = dict()
 
-        print(
-            "INFO: Working only with available numerical features, categorical features are not yet supported."
-        )
+        if self._verbose:
+            print(
+                "INFO: Working only with available numerical features, categorical features are not yet supported."
+            )
         trainset = self.__preprocessing(trainset)
         testset = self.__preprocessing(testset)
 
