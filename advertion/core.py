@@ -1,6 +1,6 @@
 from math import isclose
 from statistics import mean
-from typing import Iterable, Union
+from typing import Iterable, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -39,13 +39,16 @@ class AdversarialValidation(object):
 
     @validate_call(config=dict(arbitrary_types_allowed=True))
     def perform(
-        self, trainset: pd.DataFrame, testset: pd.DataFrame, target: str
+        self,
+        trainset: pd.DataFrame,
+        testset: pd.DataFrame,
+        target: Optional[str] = None,
     ) -> dict:
         """Orchestrates the adversarial validation process.
 
         - Creates a new feature in both the training and test datasets.
         - Sets the value of the new feature to 0.0 for the training dataset, and 1.0 for the test dataset.
-        - Drops original target variable from training dataset.
+        - Drops original target variable from training dataset, if present and specified by the user.
         - Combines the training and test datasets into a single dataset - let's call it `meta-dataset`.
         - Optionally, identifies and drops adversarial features in the design matrix.
         - Performs cross-validation on the meta-dataset, using the new feature as the target variable.
@@ -70,7 +73,8 @@ class AdversarialValidation(object):
         trainset[self._av_target] = 0.0
         testset[self._av_target] = 1.0
 
-        trainset = trainset.drop(target, axis=1)
+        if target:
+            trainset = trainset.drop(target, axis=1)
 
         combined = pd.concat([trainset, testset], axis=0, ignore_index=True)
 
