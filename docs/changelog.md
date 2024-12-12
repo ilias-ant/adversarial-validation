@@ -16,6 +16,8 @@ This means that if the `trainset` you supply does not have a target column, you 
 parameter. On the other hand, if the `trainset` you supply does have a target column, you can (and should!) denote the 
 `target` parameter, in order to be excluded from the adversarial validation process.
 
+At the same time, this release brings some minor upgrades to project dependencies.
+
 ## [0.1.1] - 2023-07-22
 
 ### Fixed
