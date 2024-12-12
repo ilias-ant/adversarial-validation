@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 before v0.1.1, format was a bit freestyle*),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2024-12-12
+
+### Changed
+
+`validate` function had a required parameter called `target`. This parameter is now optional. 
+
+This means that if the `trainset` you supply does not have a target column, you do not need to pass the `target` 
+parameter. On the other hand, if the `trainset` you supply does have a target column, you can (and should!) denote the 
+`target` parameter, in order to be excluded from the adversarial validation process.
+
+At the same time, this release brings some minor upgrades to project dependencies.
 
 ## [0.1.1] - 2023-07-22
 
