@@ -1,5 +1,5 @@
 # API Reference
 
 ::: advertion.validate
-    options:
-      docstring_style: numpy
+    rendering:
+        show_root_heading: true

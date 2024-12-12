@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 before v0.1.1, format was a bit freestyle*),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2024-12-12
+
+### Fixed
+
+Minor issues related to docs and docs dependencies, in order for the https://advertion.readthedocs.io/en/latest/ to be built 
+successfully.
+
+
 ## [1.0.0] - 2024-12-12
 
 ### Changed
