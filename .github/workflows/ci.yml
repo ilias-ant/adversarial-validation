@@ -1,79 +1,142 @@
-# This workflow will build the package and validate it (e.g. inspect code formatting, run tests) against multiple Python versions and OSs.
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
+# Lint, security-scan, test and build the package on every push to main and every PR.
 name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+
+# No default token permissions; each job asks only for what it needs.
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  POETRY_VERSION: "2.5.1"
 
 jobs:
-
   code-checks:
     name: code-checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read # check out the repository
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python v3.9
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
-    - name: Install Poetry
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install poetry
-    - name: Install Package Dependencies (required and dev)
-      run: |
-        poetry check
-        poetry install
-    - name: Inspect Code Security
-      run: |
-        poetry run bandit -r . -c "pyproject.toml"
-    - name: Inspect Code Formatting
-      run: |
-        poetry run black . --check
-        poetry run autoflake --check -r --remove-all-unused-imports --ignore-init-module-imports .
-        poetry run isort . --check
-    - name: Run Tests with Coverage
-      run: |
-        poetry run pytest --cov --cov-report=xml
-    - name: Upload Coverage Report to codecov.io
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.xml
-        flags: unittests
-        fail_ci_if_error: true
-    - name: Build
-      run: |
-        poetry build
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - name: Install Poetry
+        run: python -m pip install "poetry==${POETRY_VERSION}"
+      - name: Install package dependencies (required and dev)
+        run: |
+          poetry check --lock
+          poetry install
+      - name: Inspect code security
+        run: poetry run bandit -r . -c pyproject.toml
+      - name: Inspect code formatting
+        run: |
+          poetry run black . --check
+          poetry run autoflake --check -r --remove-all-unused-imports --ignore-init-module-imports advertion tests
+          poetry run isort . --check
+      - name: Run tests with coverage
+        run: poetry run pytest --cov --cov-report=xml
+      - name: Upload coverage report artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage
+          path: coverage.xml
+          if-no-files-found: error
+          retention-days: 7
+      - name: Build
+        run: poetry build
+
+  coverage:
+    name: coverage
+    needs: code-checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read # Codecov reads the commit's file tree
+      id-token: write # OIDC token to authenticate the Codecov upload (no stored secret)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download coverage report
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: coverage
+      - name: Upload coverage report to codecov.io
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          # PRs from forks get no OIDC token; Codecov accepts those tokenless for public repos.
+          use_oidc: ${{ !github.event.pull_request.head.repo.fork }}
+          files: ./coverage.xml
+          flags: unittests
+          fail_ci_if_error: ${{ !github.event.pull_request.head.repo.fork }}
+
+  docs:
+    name: docs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read # check out the repository
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - name: Install docs dependencies (as Read the Docs does)
+        run: python -m pip install -r docs/requirements.txt .
+      - name: Build docs
+        env:
+          NO_MKDOCS_2_WARNING: "1"
+        run: mkdocs build --strict
 
   build:
-    name: build
+    name: build (${{ matrix.os }}, py${{ matrix.python-version }})
     needs: code-checks
-
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    permissions:
+      contents: read # check out the repository
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11']
-        os: [ubuntu-latest, macos-latest, windows-latest]
-
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        os: [ubuntu-24.04, macos-15, windows-2025]
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python v${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install Poetry
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install poetry
-    - name: Install Package Dependencies (required and dev)
-      run: |
-        poetry check
-        poetry install
-    - name: Run Tests
-      run: |
-        poetry run pytest
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python v${{ matrix.python-version }}
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install OpenMP runtime (required by XGBoost on macOS)
+        if: runner.os == 'macOS'
+        run: brew install libomp
+      - name: Install Poetry
+        run: python -m pip install "poetry==${POETRY_VERSION}"
+      - name: Install package dependencies (required and dev)
+        run: poetry install
+      - name: Run tests
+        run: poetry run pytest

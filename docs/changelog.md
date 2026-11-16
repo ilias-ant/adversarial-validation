@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 before v0.1.1, format was a bit freestyle*),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Supported Python versions are now 3.11 - 3.14 (3.9 and 3.10 have reached end-of-life).
+- Runtime dependencies use version ranges instead of narrow `~` pins, so `advertion` installs alongside current
+  releases of pandas (3.x), NumPy (2.x), scikit-learn, SciPy and XGBoost (3.x). `numpy` is now declared explicitly.
+- On macOS, XGBoost 2+ requires the OpenMP runtime (`brew install libomp`); see the installation notes.
+- The package now ships its `LICENSE` file (Apache-2.0).
+- Releases are published to PyPI through Trusted Publishing (OIDC) instead of a stored API token.
+
 ## [1.0.1] - 2024-12-12
 
 ### Fixed

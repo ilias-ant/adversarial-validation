@@ -34,9 +34,13 @@ markdown_extensions:
 plugins:
 - search
 - mkdocstrings:
-    watch:
-      - advertion
     default_handler: python
+    handlers:
+      python:
+        paths: [.]
+
+watch:
+  - advertion
 
 nav:
     - Home: index.md
