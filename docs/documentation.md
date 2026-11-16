@@ -11,7 +11,6 @@ The following packages are utilized:
 To interact with the project's documentation locally, run:
 
 ```shell
-mkdocs serve
+poetry install --with docs
+poetry run mkdocs serve
 ```
-
-inside a virtual environment.

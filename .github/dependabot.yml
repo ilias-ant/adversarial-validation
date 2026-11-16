@@ -1,0 +1,39 @@
+# Weekly PRs to bump pinned GitHub Actions (commit SHAs) and Python dependencies.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    # Wait a week before proposing a new release, so compromised or yanked
+    # versions are likely caught before they reach this repo.
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  # poetry.lock (dev + docs groups and the locked runtime dependencies)
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      python:
+        patterns:
+          - "*"
+
+  # docs/requirements.txt, used by Read the Docs
+  - package-ecosystem: pip
+    directory: /docs
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      docs:
+        patterns:
+          - "*"
